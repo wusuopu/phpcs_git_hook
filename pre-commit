@@ -1,0 +1,45 @@
+#!/usr/bin/env python2
+#-*- coding:utf-8 -*-
+
+# Author:     Long Changjin <admin@longchangjin.cn>
+
+import os
+import sys
+import platform
+import subprocess
+
+BASE_DIR = "/opt/phpcs_git_hook/"
+sys.path.append("%s/build/lib.linux-%s-%d.%d" % (
+    BASE_DIR, platform.machine(), sys.version_info.major, sys.version_info.minor))
+
+import lcgit
+
+lcgit.git_threads_init()
+
+rep = lcgit.Repository('.')
+
+status = rep.status()
+
+lcgit.git_threads_shutdown()
+
+php_file_list = []
+ret = 0
+
+for f in status:
+    if not ((status[f] & lcgit.GIT_STATUS_INDEX_NEW) or
+            (status[f] & lcgit.GIT_STATUS_INDEX_MODIFIED)):
+        continue
+    if os.path.splitext(f)[1] in [".php", ".inc"]:
+        php_file_list.append(f)
+
+if php_file_list:
+    cmd = "phpcs --standard=Symfony2 -n " + " ".join(php_file_list)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    ret = p.wait()
+
+if ret != 0:
+    print("PHP代码不符合风格要求，提交失败。详情如下：")
+    print(cmd)
+    print(p.stdout.read())
+
+exit(ret)
