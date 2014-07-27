@@ -34,12 +34,13 @@ for f in status:
 
 if php_file_list:
     cmd = "phpcs --standard=Symfony2 -n " + " ".join(php_file_list)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     ret = p.wait()
 
 if ret != 0:
     print("PHP代码不符合风格要求，提交失败。详情如下：")
     print(cmd)
     print(p.stdout.read())
+    print(p.stderr.read())
 
 exit(ret)
